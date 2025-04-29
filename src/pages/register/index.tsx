@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+import React from "react";
+import { useRouter } from "next/router";
 import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import {
@@ -11,10 +12,9 @@ import {
   CardContent,
 } from "@mui/material";
 import { UserLgoinCredentials } from "@/lib/types/auth.login";
-import { useAppDispatch, useAppSelector } from "@/lib/redux/hook";
+import { useAppDispatch } from "@/lib/redux/hook";
 import { authActionCreator } from "@/lib/action/auth.action";
 import { makeStyles } from "@mui/styles";
-import { useRouter } from "next/router";
 
 const useStyles = makeStyles({
   forogotBtn: {
@@ -30,30 +30,36 @@ const useStyles = makeStyles({
   },
 });
 
-const LoginPage: React.FC = () => {
+const RegisterPage: React.FC = () => {
   const dispatch = useAppDispatch();
-  const classes = useStyles();
   const router = useRouter();
-  const { data } = useAppSelector((state) => state.authRoot.authState);
+  const classes = useStyles();
+
   const validationSchema = Yup.object({
+    firstName: Yup.string()
+      .max(50, "First name must be 50 characters or less")
+      .required("First name is required"),
+    lastName: Yup.string()
+      .max(50, "Last name must be 50 characters or less")
+      .required("Last name is required"),
+    phoneNumber: Yup.string()
+      .matches(/^[0-9]{10}$/, "Phone number must be 10 digits")
+      .required("Phone number is required"),
     email: Yup.string()
       .email("Invalid email address")
       .required("Email is required"),
     password: Yup.string()
       .min(6, "Password must be at least 6 characters long")
       .required("Password is required"),
+    confirmPassword: Yup.string()
+      .oneOf([Yup.ref("password")], "Passwords must match")
+      .required("Confirm Password is required"),
   });
 
-  const loginHandler = (formState: UserLgoinCredentials) => {
+  const registerHandler = (formState: UserLgoinCredentials) => {
     console.log(formState);
     dispatch(authActionCreator(formState));
   };
-
-  useEffect(() => {
-    if (data?.response?.code === 200 && data?.sessionId) {
-      window.location.href = "/dashboard";
-    }
-  }, [data]);
 
   return (
     <Box
@@ -76,20 +82,57 @@ const LoginPage: React.FC = () => {
               sx={{ padding: 3 }}
             >
               <Typography variant="h4" component="h1" gutterBottom>
-                Welcome Back
+                Create an Account
               </Typography>
               <Typography variant="body1" color="textSecondary" gutterBottom>
-                Please sign in to your account
+                Please fill in the details to register
               </Typography>
               <Formik
-                initialValues={{ email: "", password: "" }}
+                initialValues={{
+                  firstName: "",
+                  lastName: "",
+                  phoneNumber: "",
+                  email: "",
+                  password: "",
+                  confirmPassword: "",
+                }}
                 validationSchema={validationSchema}
                 onSubmit={(values) => {
-                  loginHandler(values);
+                  registerHandler(values);
                 }}
               >
                 {({ errors, touched }) => (
                   <Form>
+                    <Field
+                      as={TextField}
+                      margin="normal"
+                      fullWidth
+                      id="firstName"
+                      name="firstName"
+                      label="First Name"
+                      error={touched.firstName && !!errors.firstName}
+                      helperText={<ErrorMessage name="firstName" />}
+                    />
+                    <Field
+                      as={TextField}
+                      margin="normal"
+                      fullWidth
+                      id="lastName"
+                      name="lastName"
+                      label="Last Name"
+                      error={touched.lastName && !!errors.lastName}
+                      helperText={<ErrorMessage name="lastName" />}
+                    />
+                    <Field
+                      as={TextField}
+                      margin="normal"
+                      fullWidth
+                      id="phoneNumber"
+                      name="phoneNumber"
+                      label="Phone Number"
+                      error={touched.phoneNumber && !!errors.phoneNumber}
+                      helperText={<ErrorMessage name="phoneNumber" />}
+                    />
                     <Field
                       as={TextField}
                       margin="normal"
@@ -111,11 +154,17 @@ const LoginPage: React.FC = () => {
                       error={touched.password && !!errors.password}
                       helperText={<ErrorMessage name="password" />}
                     />
-                    <Box className={classes.forogotBtn}>
-                      <Button fullWidth variant="text" color="primary" disabled>
-                        Forgot Password?
-                      </Button>
-                    </Box>
+                    <Field
+                      as={TextField}
+                      margin="normal"
+                      fullWidth
+                      name="confirmPassword"
+                      label="Confirm Password"
+                      type="password"
+                      id="confirmPassword"
+                      error={touched.confirmPassword && !!errors.confirmPassword}
+                      helperText={<ErrorMessage name="confirmPassword" />}
+                    />
                     <Button
                       type="submit"
                       fullWidth
@@ -123,15 +172,15 @@ const LoginPage: React.FC = () => {
                       color="primary"
                       sx={{ mt: 3, mb: 2 }}
                     >
-                      Sign In
+                      Register
                     </Button>
                     <Button
                       fullWidth
                       variant="outlined"
                       color="inherit"
-                      onClick={() => router.push("/register")}
+                      onClick={() => router.push("/login")}
                     >
-                      Create an Account
+                      Back to Login
                     </Button>
                   </Form>
                 )}
@@ -144,4 +193,4 @@ const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage;
+export default RegisterPage;
