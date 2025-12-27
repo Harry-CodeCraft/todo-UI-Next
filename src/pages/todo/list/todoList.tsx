@@ -31,7 +31,7 @@ const TodoList: React.FC = () => {
   const [todos, setTodos] = useState<CreateTodoData[] | undefined>();
   const [editTodo, setEditTodo] = useState<CreateTodoData | undefined>();
   const [page, setPage] = useState<number>(1);
-  const [limitPerPage, setLimitPerPage] = useState<number>(20);
+  const [limitPerPage, setLimitPerPage] = useState<number>(10);
   const [editTodoDialogOpen, setEditTodoDialogOpen] = useState<boolean>(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null); // Ref for the load more trigger
 
@@ -43,7 +43,7 @@ const TodoList: React.FC = () => {
       })
     );
     console.log("todos2", page);
-  }, [dispatch, page]);
+  }, [page]);
 
   useEffect(() => {
     if (deleteDataRes?.response?.code === 200) {
@@ -54,40 +54,56 @@ const TodoList: React.FC = () => {
         })
       );
     }
-  }, [dispatch, deleteDataRes]);
+  }, [deleteDataRes]);
 
   useEffect(() => {
     if (listData?.response?.code === 200 && listData?.data?.length) {
-      setTodos(!todos?.length ? listData?.data : todos?.concat(listData?.data));
-    }
-  }, [listData]);
-  
-  // IntersectionObserver to detect when the loadMoreRef is visible
-  console.log("todos", page, limitPerPage);
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (entry.isIntersecting && !listTodoloading) {
-          console.log("Loading more data...");
-          console.log("todos1", page);
-          setPage((prevPage) => prevPage + 1); // Load the next page
+      console.log("called once");
+      setTodos((prevTodos) => {
+        if (prevTodos) {
+          // Append new todos to existing list
+          return [...prevTodos, ...listData.data!];
         } else {
-          console.log("Not loading more data...");
+          // Initialize with the first set of todos
+          return listData.data;
         }
-      },
-      { threshold: 1.0 } // Trigger when the element is fully visible
-    );
-
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
+      });
     }
 
     return () => {
-      if (loadMoreRef.current) {
-        observer.unobserve(loadMoreRef.current);
-      }
+      setTodos([]);
     };
+  }, [listData]);
+  console.log("todos", todos);
+
+  // IntersectionObserver to detect when the loadMoreRef is visible
+  useEffect(() => {
+    if (listData && listData.data?.length === limitPerPage) {
+      console.log("IntersectionObserver set up");
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          const entry = entries[0];
+          if (entry.isIntersecting && !listTodoloading) {
+            console.log("Loading more data...");
+            console.log("todos1", page);
+            setPage((prevPage) => prevPage + 1); // Load the next page
+          } else {
+            console.log("Not loading more data...");
+          }
+        },
+        { threshold: 1.0 } // Trigger when the element is fully visible
+      );
+
+      if (loadMoreRef.current) {
+        observer.observe(loadMoreRef.current);
+      }
+      return () => {
+        if (loadMoreRef.current) {
+          observer.unobserve(loadMoreRef.current);
+        }
+      };
+    }
   }, [listTodoloading]);
 
   function openDialogFn(todo: CreateTodoData) {
