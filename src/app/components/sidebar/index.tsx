@@ -18,6 +18,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { makeStyles } from "@mui/styles";
 import { globalColors } from "@/app/styles/colors";
+import { UploadFile } from "@mui/icons-material";
 
 const StyledDrawer = styled(Drawer)(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -123,6 +124,20 @@ const Sidebar: React.FC<{
                 <AddCircleIcon style={{ color: "#ffffff" }} />
               </ListItemIcon>
               {isOpen && <ListItemText primary="Create Todo" />}
+            </StyledListItem>
+          </Tooltip>
+          <Tooltip
+            title="View Todos"
+            placement="right"
+            disableHoverListener={isOpen}
+          >
+            <StyledListItem
+              onClick={() => routeToPage("/todo/bulkUploadTodos")}
+            >
+              <ListItemIcon>
+                <UploadFile style={{ color: "#ffffff" }} />
+              </ListItemIcon>
+              {isOpen && <ListItemText primary="Bulk upload Todo" />}
             </StyledListItem>
           </Tooltip>
           <Tooltip

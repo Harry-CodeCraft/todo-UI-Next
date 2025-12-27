@@ -9,6 +9,9 @@ export interface ListTodoResponse {
 export interface ListTodoState {
   response?: IResponse;
   data?: CreateTodoData[];
+  limit?: number;
+  page?: number;
+  totoalNotes?: number;
   listTodoloading: boolean;
   listTodoError: boolean;
 }
